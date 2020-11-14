@@ -61,6 +61,7 @@ async def text(message):
 
 async def get_locations(args):
     locs = await requests.get(API_URL + f'api/get_location?lat={args["lat"]}&lon={args["lon"]}&r={args["dist"]}').json()
+    locs.sort(key=lambda x: x['rating'], reverse=True)
     keyboard = types.InlineKeyboardMarkup()
     for loc in locs:
         place = types.InlineKeyboardButton(text=loc['name'], url=PLACE_ID_URL + loc["place_id"])
