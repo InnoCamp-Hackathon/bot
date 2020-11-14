@@ -1,7 +1,7 @@
 from aiogram import types
 
 TOKEN = '1461857485:AAHl4bmhq3f3rjdewQZoKWD5RVtdd3EZ-PI'
-API_URL = 'localhost:8000/'
+API_URL = 'localhost:8000'
 PLACE_ID_URL = 'https://www.google.com/maps/search/?api=1&query=Eiffel%20Tower&query_place_id='
 messages = {
     'hello': 'Привет это бот шашлыков.',

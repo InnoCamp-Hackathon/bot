@@ -4,18 +4,27 @@ from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 from aiogram.types import ContentType
 from aiogram import types
+from aiohttp.client import ClientSession
 import requests
 from config import TOKEN, messages, keyboards, API_URL, PLACE_ID_URL
 
 loop = asyncio.get_event_loop()
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
+executor = executor.Executor(dp)
+
+session = ClientSession()
 
 args = {
     'lon': None,
     'lat': None,
-    'dist': None
+    'radius': None
 }
+
+
+@executor.on_shutdown
+async def shutdown():
+    await session.close()
 
 
 @dp.message_handler(commands=['start'])
@@ -41,7 +50,7 @@ async def text(message):
 
     elif message.text.isdigit():
         global args
-        args['dist'] = message.text
+        args['radius'] = message.text
 
         if all(args):
             keyboard = await get_locations(args)
@@ -60,13 +69,18 @@ async def text(message):
 
 
 async def get_locations(args):
-    locs = await requests.get(API_URL + f'api/get_location?lat={args["lat"]}&lon={args["lon"]}&r={args["dist"]}').json()
+    # locs = requests.get(API_URL + f'api/get_location?lat={args["lat"]}&lon={args["lon"]}&radius={args["dist"]}').json()
+    async with session.get(
+        f'http://{API_URL}/api/places/nearby',
+        params=args,
+        headers={'Accept': 'application/json'}
+    ) as resp:
+        locs = await resp.json()
     locs.sort(key=lambda x: x['rating'], reverse=True)
     keyboard = types.InlineKeyboardMarkup()
     for loc in locs:
         place = types.InlineKeyboardButton(text=loc['name'], url=PLACE_ID_URL + loc["place_id"])
         keyboard.add(place)
-
     return keyboard
 
 
