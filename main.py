@@ -3,8 +3,9 @@ from aiogram import Bot
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils import executor
 from aiogram.types import ContentType
+from aiogram import types
 import requests
-from config import TOKEN, messages, keyboards, API_URL
+from config import TOKEN, messages, keyboards, API_URL, PLACE_ID_URL
 
 loop = asyncio.get_event_loop()
 bot = Bot(token=TOKEN)
@@ -43,8 +44,8 @@ async def text(message):
         args['dist'] = message.text
 
         if all(args):
-            locations = await get_locations(args)
-            await bot.send_message(message.chat.id, locations)
+            keyboard = await get_locations(args)
+            await bot.send_message(message.chat.id, messages['places'], reply_markup=keyboard)
         else:
             await bot.send_message(message.chat.id, messages['error'], reply_markup=keyboards['start'])
 
@@ -54,15 +55,18 @@ async def text(message):
             'dist': None
         }
 
-
     else:
-        print(message)
+        await bot.send_message(message.chat.id, messages['what'], reply_markup=keyboards['start'])
 
 
 async def get_locations(args):
-    locs = requests.get(API_URL + f'api/get_location?lat={args["lat"]}&lon={args["lon"]}&r={args["dist"]}')
+    locs = await requests.get(API_URL + f'api/get_location?lat={args["lat"]}&lon={args["lon"]}&r={args["dist"]}').json()
+    keyboard = types.InlineKeyboardMarkup()
+    for loc in locs:
+        place = types.InlineKeyboardButton(text=loc['name'], url=PLACE_ID_URL + loc["place_id"])
+        keyboard.add(place)
 
-    return 0
+    return keyboard
 
 
 if __name__ == '__main__':
