@@ -17,7 +17,6 @@ args = {
     'dist': None
 }
 
-
 @dp.message_handler(commands=['start'])
 async def start_message(message):
     await bot.send_message(message.chat.id, messages['hello'], reply_markup=keyboards['start'])
